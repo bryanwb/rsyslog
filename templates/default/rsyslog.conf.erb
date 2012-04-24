@@ -3,7 +3,6 @@
 #			For more information see
 #			/usr/share/doc/rsyslog-doc/html/rsyslog_conf.html
 
-
 #################
 #### MODULES ####
 #################
@@ -37,6 +36,7 @@ $ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
 # Filter duplicated messages
 $RepeatedMsgReduction on
 
+<% unless node.platform == "redhat" or node.platform == "centos" or  node.platform == "fedora" -%>
 #
 # Set temporary directory to buffer syslog queue
 #
@@ -47,18 +47,52 @@ $WorkDirectory /var/spool/rsyslog
 #
 $FileOwner syslog
 $FileGroup adm
+$PrivDropToUser syslog
+$PrivDropToGroup adm
+
+<% end -%>
+
 $FileCreateMode 0640
 $DirCreateMode 0755
 $Umask 0022
-$PrivDropToUser syslog
-$PrivDropToGroup adm
 
 #
 # Include all config files in /etc/rsyslog.d/
 #
 $IncludeConfig /etc/rsyslog.d/*.conf
 
-<% unless node[:platform] == 'ubuntu' -%>
+<% if node.platform == "redhat" or node.platform == "centos" or  node.platform == "fedora" -%>
+#### RULES ####
+# Log all kernel messages to the console.
+# Logging much else clutters up the screen.
+#kern.*                                                 /dev/console
+
+# Log anything (except mail) of level info or higher.
+# Don't log private authentication messages!
+*.info;mail.none;authpriv.none;cron.none;local0.none;local1.none;local2.none;local3.none;local4.none;local5.none;local6.none;local7.none     /var/log/messages
+
+# The authpriv file has restricted access.
+authpriv.*                        /var/log/secure
+
+# Log all the mail messages in one place.
+mail.*                      -/var/log/maillog
+
+
+# Log cron stuff
+cron.*                       /var/log/cron
+
+# Everybody gets emergency messages
+*.emerg                                        *
+
+# Save news errors of level crit and higher in a special file.
+uucp,news.crit              /var/log/spooler
+
+
+# Save boot messages also to boot.log
+local7.*                  /var/log/boot.log
+
+
+<% elsif !node[:platform] == 'ubuntu' -%>
 ###############
 #### RULES ####
 ###############
@@ -106,23 +140,6 @@ news.notice			-/var/log/news/news.notice
 #
 *.emerg				*
 
-#
-# I like to have messages displayed on the console, but only on a virtual
-# console I usually leave idle.
-#
-#daemon,mail.*;\
-#	news.=crit;news.=err;news.=notice;\
-#	*.=debug;*.=info;\
-#	*.=notice;*.=warn	/dev/tty8
-
-# The named pipe /dev/xconsole is for the `xconsole' utility.  To use it,
-# you must invoke `xconsole' with the `-file' option:
-#
-#    $ xconsole -file /dev/xconsole [...]
-#
-# NOTE: adjust the list below, or you'll go crazy if you have a reasonably
-#      busy site..
-#
 daemon.*;mail.*;\
 	news.err;\
 	*.=debug;*.=info;\

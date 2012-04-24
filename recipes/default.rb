@@ -33,8 +33,8 @@ package "rsyslog" do
   action :install
 end
 
-cookbook_file "/etc/default/rsyslog" do
-  source "rsyslog.default"
+template node["rsyslog"]["override_defaults_file"] do
+  source "rsyslog.default.erb"
   owner "root"
   group "root"
   mode 0644
@@ -46,12 +46,14 @@ directory "/etc/rsyslog.d" do
   mode 0755
 end
 
-directory "/var/spool/rsyslog" do
-  owner "syslog"
-  group "adm"
-  mode 0755
+unless platform?("redhat","centos","fedora") 
+  directory "/var/spool/rsyslog" do
+    owner "syslog"
+    group "adm"
+    mode 0755
+  end
 end
-
+  
 template "/etc/rsyslog.conf" do
   source "rsyslog.conf.erb"
   owner "root"

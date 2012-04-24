@@ -25,3 +25,10 @@ default["rsyslog"]["server_ip"]     = nil
 default["rsyslog"]["server_search"] = "role:loghost"
 default["rsyslog"]["remote_logs"]   = true
 default["rsyslog"]["per_host_dir"]  = "%$YEAR%/%$MONTH%/%$DAY%/%HOSTNAME%"
+default['rsyslog']['rsyslogd_options'] = "-c 3"
+
+if platform? "redhat","centos","fedora"
+  default["rsyslog"]["override_defaults_file"] = "/etc/sysconfig/rsyslog"
+else
+  default["rsyslog"]["override_defaults_file"] = "/etc/default/rsyslog"
+end
