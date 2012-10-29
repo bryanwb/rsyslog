@@ -9,7 +9,8 @@
 
 $ModLoad imuxsock # provides support for local system logging
 $ModLoad imklog   # provides kernel logging support (previously done by rklogd)
-#$ModLoad immark  # provides --MARK-- message capability
+$ModLoad immark  # provides --MARK-- message capability
+$MarkMessagePeriod 0
 
 <% if node['rsyslog']['server'] -%>
 # Provide <%= @protocol.upcase %> log reception
